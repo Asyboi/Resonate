@@ -15,7 +15,7 @@ Built at Creator Economy Hack, 2026-11-22. Track: Idea to Post.
 
 ## Works alongside Stanley
 
-Optional. Resonate can connect to Stanley over MCP to pull a creator's past posts (confirmed by the creator before use) and to send a brief they have read and edited, to be saved as an unscheduled draft. It asks for the `chat` permission only and refuses a token that can publish. The finished post never depends on Stanley.
+Optional. Resonate can connect to Stanley over MCP to pull a creator's past posts (confirmed by the creator before use) and to send a brief they have read and edited, to be saved as an unscheduled draft. It asks for the `chat` permission only and refuses a token that can publish. It identifies itself with a [Client ID Metadata Document](https://app.getstanley.ai/docs/mcp), so signing in works only on a public https deployment, not on localhost. The finished post never depends on Stanley.
 
 ## How it uses You.com
 

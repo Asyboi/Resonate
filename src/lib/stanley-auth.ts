@@ -39,6 +39,26 @@ export function originOf(request: Request): string {
   return `${protocol}://${host}`;
 }
 
+const redirectFor = (origin: string) => `${origin}/api/stanley/callback`;
+const documentUrlFor = (origin: string) => `${origin}/api/stanley/client`;
+
+const metadataFor = (origin: string) => ({
+  client_name: "Resonate",
+  redirect_uris: [redirectFor(origin)],
+  grant_types: ["authorization_code", "refresh_token"],
+  response_types: ["code"],
+  token_endpoint_auth_method: "none",
+  scope: SCOPE,
+});
+
+/**
+ * Our Client ID Metadata Document. Stanley allows dynamic registration only for approved clients,
+ * so the client_id is this document's URL and Stanley fetches it. See app.getstanley.ai/docs/mcp.
+ */
+export function clientDocument(origin: string) {
+  return { client_id: documentUrlFor(origin), client_uri: origin, ...metadataFor(origin) };
+}
+
 export class StanleyAuth implements OAuthClientProvider {
   authorizationUrl: URL | undefined;
   private readonly secret: string;
@@ -88,18 +108,16 @@ export class StanleyAuth implements OAuthClientProvider {
   }
 
   get redirectUrl() {
-    return `${this.origin}/api/stanley/callback`;
+    return redirectFor(this.origin);
   }
 
   get clientMetadata() {
-    return {
-      client_name: "Resonate",
-      redirect_uris: [this.redirectUrl],
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      token_endpoint_auth_method: "none",
-      scope: SCOPE,
-    };
+    return metadataFor(this.origin);
+  }
+
+  /** The document must be public https, so signing in only works on the deployed site. */
+  get clientMetadataUrl() {
+    return this.origin.startsWith("https:") ? documentUrlFor(this.origin) : undefined;
   }
 
   connected(): boolean {
