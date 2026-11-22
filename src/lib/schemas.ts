@@ -22,3 +22,15 @@ export const LessonInput = z.object({
 });
 
 export const DiscoverBody = z.object({ lessons: z.array(LessonInput).min(1).max(6) });
+
+export const PostOutput = z.object({ post: z.string() });
+
+// Unknown fields are stripped, so a found person's name, quote and link can't reach the model.
+export const PostBody = z.object({
+  lesson: z.string().min(1).max(1000),
+  evidence: z.array(z.string().max(2000)).max(10),
+  angle: z.string().max(2000),
+  take: z.string().trim().min(1).max(10_000),
+  situations: z.array(z.string().min(1).max(100)).min(1).max(5),
+  nicheSummary: z.string().max(10_000),
+});
