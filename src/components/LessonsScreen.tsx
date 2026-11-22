@@ -108,7 +108,6 @@ export function LessonsScreen({
             Find who needs this <ArrowRight className="size-7" />
           </Primary>
         )}
-        <p className="text-[15px] text-muted">Saved here. Read by OpenAI. Searches go to You.com.</p>
       </div>
 
       {editing && (
