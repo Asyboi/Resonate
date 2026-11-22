@@ -9,8 +9,8 @@ export const maxDuration = 120;
 export async function POST(request: Request) {
   const checked = await guard(request, DiscoverBody);
   if ("response" in checked) return checked.response;
-  const { lessons } = checked.data;
+  const { lessons, audience } = checked.data;
   return eventStream(
-    discover({ lessons, seeds: seedsFrom(lessons), withResearch: true, signal: request.signal }, liveDeps),
+    discover({ lessons, seeds: seedsFrom(lessons), withResearch: true, signal: request.signal, audience }, liveDeps),
   );
 }

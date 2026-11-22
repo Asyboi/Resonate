@@ -6,6 +6,7 @@ import type { Selection } from "@/lib/graph";
 import type { Run } from "@/lib/run";
 import type { Lesson, Match, Person } from "@/lib/types";
 import { DetailPanel } from "./DetailPanel";
+import { AudienceDot } from "./icons";
 import { ResonanceBox, LoopPanel } from "./ResonanceBox";
 import { ErrorLine, Primary, Secondary } from "./ui";
 
@@ -111,11 +112,16 @@ export function MapScreen({
     <main className="flex min-h-0 flex-1 gap-10 pt-2 pr-8 pb-6 pl-10">
       <section className="flex min-w-0 flex-1 flex-col">
         <div className="flex shrink-0 items-center justify-between gap-5 pt-2">
-          <h1 className="font-display text-[clamp(34px,3.1vw,44px)] leading-[54px] font-semibold">{heading(run)}</h1>
-          <ul className="flex shrink-0 items-center gap-5 text-[16px] text-muted">
+          <h1 className="shrink-0 font-display text-[clamp(34px,3.1vw,44px)] leading-[54px] font-semibold">{heading(run)}</h1>
+          <ul className="flex min-w-0 flex-wrap items-center justify-end gap-x-5 gap-y-1 text-[16px] text-muted">
             <li className="flex items-center gap-2">
               <span className="size-3.5 rounded-full bg-sky" /> Live
             </li>
+            {people.some((item) => item.likeAudience) && (
+              <li className="flex items-center gap-2">
+                <AudienceDot /> Like your audience
+              </li>
+            )}
             <li className="flex items-center gap-2">
               <ResonanceLegend /> Resonance
             </li>
@@ -151,7 +157,8 @@ export function MapScreen({
             {matches.map((item) => (
               <li key={`${item.lessonId}:${item.personId}`}>
                 <button type="button" onClick={() => onSelect({ lessonId: item.lessonId, personId: item.personId })}>
-                  {people.find((p) => p.id === item.personId)?.label}, for {lessons.find((l) => l.id === item.lessonId)?.label}
+                  {people.find((p) => p.id === item.personId)?.label}
+                  {people.find((p) => p.id === item.personId)?.likeAudience ? ", like your audience" : ""}, for {lessons.find((l) => l.id === item.lessonId)?.label}
                 </button>
               </li>
             ))}

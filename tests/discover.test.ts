@@ -35,6 +35,7 @@ function fakes(overrides: Partial<DiscoverDeps> = {}): DiscoverDeps {
       })),
     ),
     research: vi.fn(async () => []),
+    aim: vi.fn(async (lessons: Lesson[]) => lessons.map(({ id }) => ({ lessonId: id, query: `aimed ${id}` }))),
     judge: vi.fn(async (_lessons, candidates) =>
       candidates.map((_: unknown, index: number) => ({
         index,
@@ -50,10 +51,10 @@ function fakes(overrides: Partial<DiscoverDeps> = {}): DiscoverDeps {
 
 async function run(
   deps: DiscoverDeps,
-  { lessons = [lesson("a")], withResearch = false, signal = new AbortController().signal } = {},
+  { lessons = [lesson("a")], withResearch = false, signal = new AbortController().signal, audience = "" } = {},
 ) {
   const events: DiscoverEvent[] = [];
-  for await (const event of discover({ lessons, seeds: seedsFrom(lessons), withResearch, signal }, deps)) {
+  for await (const event of discover({ lessons, seeds: seedsFrom(lessons), withResearch, signal, audience }, deps)) {
     events.push(event);
   }
   return events;
@@ -261,4 +262,62 @@ test("skips people the creator already has", async () => {
     void _;
   }
   expect(deps.judge).not.toHaveBeenCalled();
+});
+
+const AUDIENCE = "University students and software engineers";
+const judgedLike = async () => [
+  {
+    index: 0,
+    label: "Afraid to rest",
+    situation: "Afraid to rest",
+    quote: QUOTE,
+    likeAudience: true,
+    matches: [{ lessonId: "a", strength: 4, why: "Same situation" }],
+  },
+];
+const searched = (deps: DiscoverDeps) => vi.mocked(deps.search).mock.calls.map(([query]) => query);
+
+test("an audience steers one of each lesson's three searches", async () => {
+  const deps = fakes();
+  await run(deps, { lessons: [lesson("a", ["one", "two", "three"])], withResearch: true, audience: AUDIENCE });
+  expect(searched(deps)).toEqual(["aimed a", "one", "two"]);
+});
+
+test("without an audience nothing is aimed", async () => {
+  const deps = fakes();
+  await run(deps, { lessons: [lesson("a", ["one", "two", "three"])], withResearch: true });
+  expect(deps.aim).not.toHaveBeenCalled();
+  expect(searched(deps)).toEqual(["one", "two", "three"]);
+  expect(vi.mocked(deps.research).mock.calls[0][0]).toEqual(["people who need a"]);
+});
+
+test("a failed aim falls back to the lesson's own searches", async () => {
+  const deps = fakes({
+    aim: async () => {
+      throw new Error("down");
+    },
+  });
+  const events = await run(deps, { lessons: [lesson("a", ["one", "two", "three"])], withResearch: true, audience: AUDIENCE });
+  expect(searched(deps)).toEqual(["one", "two", "three"]);
+  expect(events).not.toContainEqual(expect.objectContaining({ type: "error" }));
+});
+
+test("comment searches are never rewritten for the audience", async () => {
+  const deps = fakes();
+  await run(deps, { audience: AUDIENCE });
+  expect(deps.aim).not.toHaveBeenCalled();
+});
+
+test("Research hears about the audience", async () => {
+  const deps = fakes();
+  await run(deps, { withResearch: true, audience: AUDIENCE });
+  expect(vi.mocked(deps.research).mock.calls[0][0][0]).toContain(AUDIENCE);
+});
+
+test("marks someone like the audience", async () => {
+  expect(people(await run(fakes({ judge: judgedLike }), { audience: AUDIENCE }))[0].person.likeAudience).toBe(true);
+});
+
+test("marks no one without an audience", async () => {
+  expect(people(await run(fakes({ judge: judgedLike })))[0].person.likeAudience).toBeUndefined();
 });

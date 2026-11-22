@@ -98,3 +98,11 @@ export const ResonanceDot = ({ className = "size-6" }: IconProps) => (
     <circle cx="12" cy="12" r="5.5" className="fill-resonance" />
   </svg>
 );
+
+/** A live dot with the creator's navy at its center. */
+export const AudienceDot = ({ className = "size-3.5" }: IconProps) => (
+  <svg className={className} viewBox="0 0 14 14" aria-hidden="true">
+    <circle cx="7" cy="7" r="7" className="fill-sky" />
+    <circle cx="7" cy="7" r="3.2" className="fill-navy" />
+  </svg>
+);

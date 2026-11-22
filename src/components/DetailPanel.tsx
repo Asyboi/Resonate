@@ -1,5 +1,5 @@
 import type { Match, Person } from "@/lib/types";
-import { ArrowRight, Verified } from "./icons";
+import { ArrowRight, AudienceDot, Verified } from "./icons";
 import { Primary } from "./ui";
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -8,7 +8,14 @@ export function DetailPanel({ person, match, onWrite }: { person: Person; match:
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col gap-[clamp(12px,calc(10dvh_-_54px),44px)] overflow-y-auto">
-        <h2 className="font-display text-[clamp(25px,4dvh,36px)] leading-[1.2] font-semibold">{person.situation}</h2>
+        <div className="shrink-0">
+          {person.likeAudience && (
+            <p className="mb-3 flex w-fit items-center gap-2 rounded-full bg-wash px-3 py-1 text-[15px] font-bold text-blue short:mb-2">
+              <AudienceDot /> Like your audience
+            </p>
+          )}
+          <h2 className="font-display text-[clamp(25px,4dvh,36px)] leading-[1.2] font-semibold">{person.situation}</h2>
+        </div>
         <blockquote className="line-clamp-5 shrink-0 font-display text-[clamp(18px,2.9dvh,27px)] leading-[1.42]">“{person.quote}”</blockquote>
         <div className="rounded-field bg-white px-5 py-4">
           <div className="flex items-center justify-between gap-3">

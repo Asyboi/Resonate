@@ -13,7 +13,7 @@ export const maxDuration = 120;
 export async function POST(request: Request) {
   const checked = await guard(request, ResonateBody);
   if ("response" in checked) return checked.response;
-  const { comment, lessons, exclude } = checked.data;
+  const { comment, lessons, exclude, audience } = checked.data;
 
   async function* events(): AsyncGenerator<DiscoverEvent> {
     try {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       yield { type: "resonance", lessonId: lesson.id, situation, queries };
 
       const seeds = queries.map((query): Seed => ({ lessonId: lesson.id, query, origin: "resonance" }));
-      yield* discover({ lessons, seeds, withResearch: false, signal: request.signal, exclude }, liveDeps);
+      yield* discover({ lessons, seeds, withResearch: false, signal: request.signal, exclude, audience }, liveDeps);
     } catch (error) {
       console.error("resonate:", error instanceof Error ? error.message : error);
       yield { type: "error", message: "Couldn't read that comment. Try again." };

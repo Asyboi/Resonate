@@ -27,6 +27,8 @@ export type Person = {
   /** The search that found them. */
   foundBy: string;
   origin: Origin;
+  /** Their own page shows they're in one of the creator's audience groups. */
+  likeAudience?: boolean;
 };
 
 export type Match = { personId: string; lessonId: string; strength: 1 | 2 | 3 | 4 | 5; why: string };

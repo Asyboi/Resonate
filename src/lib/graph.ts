@@ -3,7 +3,7 @@ import type { Lesson, Match, Person } from "./types";
 
 export type GraphNode =
   | { id: string; kind: "lesson"; text: string; connections: number }
-  | { id: string; kind: "person"; text: string; origin: Person["origin"] };
+  | { id: string; kind: "person"; text: string; origin: Person["origin"]; likeAudience: boolean };
 
 export type GraphLink = { source: string; target: string; lessonId: string; personId: string; strength: Match["strength"] };
 
@@ -15,11 +15,14 @@ export function rankFor(lessonId: string, matches: Match[]): Match[] {
   return matches.filter((match) => match.lessonId === lessonId).sort((a, b) => b.strength - a.strength);
 }
 
-/** The best 5 per lesson, plus everyone found through resonance, so a cluster can always grow. */
+/** The best 5 per lesson, plus everyone found through resonance, so a cluster can always grow. The audience breaks ties. */
 export function topMatches(people: Person[], matches: Match[], perLesson = PER_LESSON): Match[] {
+  const like = new Set(people.filter((person) => person.likeAudience).map((person) => person.id));
   const resonant = new Set(people.filter((person) => person.origin === "resonance").map((person) => person.id));
   return [...new Set(matches.map((match) => match.lessonId))].flatMap((lessonId) => {
-    const ranked = rankFor(lessonId, matches);
+    const ranked = rankFor(lessonId, matches).sort(
+      (a, b) => b.strength - a.strength || Number(like.has(b.personId)) - Number(like.has(a.personId)),
+    );
     return [
       ...ranked.filter((match) => !resonant.has(match.personId)).slice(0, perLesson),
       ...ranked.filter((match) => resonant.has(match.personId)),
@@ -61,7 +64,7 @@ export function toGraph(lessons: Lesson[], people: Person[], matches: Match[]): 
       ),
       ...people
         .filter((person) => linked.has(person.id))
-        .map((person): GraphNode => ({ id: person.id, kind: "person", text: person.label, origin: person.origin })),
+        .map((person): GraphNode => ({ id: person.id, kind: "person", text: person.label, origin: person.origin, likeAudience: Boolean(person.likeAudience) })),
     ],
     links: valid.map(({ lessonId, personId, strength }) => ({ source: lessonId, target: personId, lessonId, personId, strength })),
   };

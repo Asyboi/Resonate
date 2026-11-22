@@ -5,6 +5,7 @@ import sample from "@/fixtures/sample-profile.json";
 import { errorText, postJson } from "@/lib/client";
 import type { Stanley } from "@/lib/stanley-client";
 import type { Context, Lesson } from "@/lib/types";
+import { AudienceLine } from "./AudienceLine";
 import { ContextInput } from "./ContextInput";
 import { ArrowRight, Pencil } from "./icons";
 import { LessonEditor } from "./LessonEditor";
@@ -17,16 +18,20 @@ const KIND = { post: "Post", note: "Note", voice: "Voice" } as const;
 export function LessonsScreen({
   contexts,
   lessons,
+  audience,
   stanley,
   onFound,
   onLessons,
+  onAudience,
   onFind,
 }: {
   contexts: Context[];
   lessons: Lesson[];
+  audience: string;
   stanley: Stanley;
   onFound: (contexts: Context[], lessons: Lesson[]) => void;
   onLessons: (lessons: Lesson[]) => void;
+  onAudience: (audience: string) => void;
   onFind: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -63,10 +68,10 @@ export function LessonsScreen({
 
   return (
     <main className="flex flex-1 flex-col items-center overflow-y-auto px-14 pb-6">
-      <h1 className="mt-[clamp(8px,5dvh,52px)] shrink-0 text-center font-display text-[48px] leading-[58px] font-semibold">
+      <h1 className="mt-[clamp(8px,5dvh,52px)] shrink-0 short:mt-3 text-center font-display text-[48px] leading-[58px] font-semibold">
         What have you lived through?
       </h1>
-      <div className="mt-7 flex w-full shrink-0 flex-col items-center gap-3">
+      <div className="mt-7 flex w-full shrink-0 flex-col items-center gap-3 short:mt-5">
         <ContextInput busy={busy} onAdd={add} extra={<PullFromStanley stanley={stanley} />} />
         <ErrorLine message={error ?? stanley.pullError} />
       </div>
@@ -77,7 +82,7 @@ export function LessonsScreen({
         </button>
       ) : (
         <ul
-          className={`mt-[clamp(20px,5dvh,56px)] grid w-full max-w-[1328px] shrink-0 gap-7 ${lessons.length === 1 ? "max-w-[424px] grid-cols-1" : lessons.length === 2 ? "max-w-[876px] grid-cols-2" : "grid-cols-3"}`}
+          className={`mt-[clamp(20px,5dvh,56px)] short:mt-5 grid w-full max-w-[1328px] shrink-0 gap-7 ${lessons.length === 1 ? "max-w-[424px] grid-cols-1" : lessons.length === 2 ? "max-w-[876px] grid-cols-2" : "grid-cols-3"}`}
         >
           {lessons.map((lesson) => {
             const evidence = lesson.evidence[0];
@@ -87,7 +92,7 @@ export function LessonsScreen({
                 <button
                   type="button"
                   onClick={() => setEditing(lesson)}
-                  className="flex h-full min-h-[clamp(220px,34dvh,328px)] w-full flex-col justify-between gap-6 rounded-panel border-2 border-transparent bg-panel p-8 text-left hover:border-blue"
+                  className="flex h-full min-h-[clamp(220px,34dvh,328px)] w-full flex-col justify-between gap-6 rounded-panel border-2 border-transparent bg-panel p-8 text-left hover:border-blue short:gap-4 short:p-6"
                 >
                   <span className="flex w-full items-start justify-between gap-4">
                     <span className="font-display text-[31px] leading-[39px] font-semibold">{lesson.label}</span>
@@ -95,7 +100,7 @@ export function LessonsScreen({
                   </span>
                   {evidence && (
                     <span className="block w-full rounded-field bg-white p-5">
-                      <span className="line-clamp-4 font-display text-[19px] leading-7">“{evidence.quote}”</span>
+                      <span className="line-clamp-4 short:line-clamp-3 font-display text-[19px] leading-7">“{evidence.quote}”</span>
                       <span className="mt-2 block text-[15px] font-semibold text-blue">{KIND[source?.kind ?? "note"]}</span>
                     </span>
                   )}
@@ -106,11 +111,14 @@ export function LessonsScreen({
         </ul>
       )}
 
-      <div className="mt-auto flex shrink-0 flex-col items-center gap-4 pt-8">
+      <div className="mt-auto flex w-full shrink-0 items-center justify-center gap-4 pt-8 short:pt-4">
         {lessons.length > 0 && (
-          <Primary className="w-[360px]" disabled={busy} onClick={onFind}>
-            Find who needs this <ArrowRight className="size-7" />
-          </Primary>
+          <>
+            <AudienceLine audience={audience} stanley={stanley} onChange={onAudience} />
+            <Primary className="w-[360px]" disabled={busy} onClick={onFind}>
+              Find who needs this <ArrowRight className="size-7" />
+            </Primary>
+          </>
         )}
       </div>
 

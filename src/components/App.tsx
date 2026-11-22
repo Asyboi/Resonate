@@ -161,7 +161,7 @@ export function App() {
     let finished = false;
     let failed = false;
     try {
-      for await (const event of postEvents("discover", { lessons }, active.signal)) {
+      for await (const event of postEvents("discover", { lessons, audience: saved.audience || undefined }, active.signal)) {
         if (active.signal.aborted) return;
         onCommonEvent(event);
         if (event.type === "error") failed = true;
@@ -201,7 +201,12 @@ export function App() {
     setPicked(null);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     try {
-      const body = { comment, lessons: saved.lessons, exclude: saved.people.map((person) => person.url).slice(-300) };
+      const body = {
+        comment,
+        lessons: saved.lessons,
+        audience: saved.audience || undefined,
+        exclude: saved.people.map((person) => person.url).slice(-300),
+      };
       for await (const event of postEvents("resonate", body, active.signal)) {
         if (active.signal.aborted) return;
         onCommonEvent(event);
@@ -228,6 +233,16 @@ export function App() {
     } catch (cause) {
       if (!active.signal.aborted) setRun((current) => ({ ...current, running: false, error: errorText(cause) }));
     }
+  }
+
+  function changeAudience(audience: string) {
+    if (audience === saved.audience) return;
+    // A run still going was aimed at the old line, and its marks belong to that line.
+    if (run.running) {
+      controller.current?.abort();
+      setRun((current) => ({ ...current, running: false }));
+    }
+    setSaved((current) => ({ ...current, audience, people: current.people.map((person) => ({ ...person, likeAudience: undefined })) }));
   }
 
   const changeBrief = useCallback((target: Selection, patch: Partial<Brief> | ((current: Brief) => Partial<Brief>)) => {
@@ -281,11 +296,13 @@ export function App() {
         <LessonsScreen
           contexts={saved.contexts}
           lessons={saved.lessons}
+          audience={saved.audience}
           stanley={stanley}
           onFound={(contexts, lessons) =>
             setSaved((current) => ({ ...current, contexts: [...current.contexts, ...contexts], lessons: [...current.lessons, ...lessons].slice(0, 6) }))
           }
           onLessons={(lessons) => setSaved((current) => ({ ...current, lessons }))}
+          onAudience={changeAudience}
           onFind={() => void findPeople(saved.lessons, true)}
         />
       )}

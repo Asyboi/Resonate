@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { audienceSeeds } from "./audience";
 import { extractPublished, isRecent } from "./dates";
 import { quoteAppears } from "./quotes";
 import type { DiscoverEvent, Lesson, Match, Origin } from "./types";
@@ -7,6 +8,8 @@ import type { Hit, Page } from "./you";
 const MAX_CANDIDATES = 15;
 const MAX_FINALISTS = 5;
 const MIN_STRENGTH = 3;
+// Aiming must never hold up the map for long.
+const AIM_TIMEOUT_MS = 7000;
 const WINDOW_DAYS = 7;
 // Search dates ran up to 17 hours later than the page's own date in testing,
 // so without a date from the page, allow a day less.
@@ -19,6 +22,7 @@ export type Keep = {
   label: string;
   situation: string;
   quote: string;
+  likeAudience?: boolean;
   matches: { lessonId: string; strength: number; why: string }[];
 };
 
@@ -27,7 +31,8 @@ export type DiscoverDeps = {
   search(query: string, signal?: AbortSignal): Promise<Hit[]>;
   contents(urls: string[], signal?: AbortSignal): Promise<Page[]>;
   research(audiences: string[], signal?: AbortSignal): Promise<{ lessonIndex: number; query: string }[]>;
-  judge(lessons: Lesson[], candidates: Hit[], signal?: AbortSignal): Promise<Keep[]>;
+  aim(lessons: Lesson[], audience: string, signal?: AbortSignal): Promise<{ lessonId: string; query: string }[]>;
+  judge(lessons: Lesson[], candidates: Hit[], signal?: AbortSignal, audience?: string): Promise<Keep[]>;
 };
 
 export function seedsFrom(lessons: Lesson[]): Seed[] {
@@ -58,10 +63,18 @@ function interleave(lists: Hit[][]): Hit[] {
 }
 
 export async function* discover(
-  args: { lessons: Lesson[]; seeds: Seed[]; withResearch: boolean; signal: AbortSignal; exclude?: string[] },
+  args: {
+    lessons: Lesson[];
+    seeds: Seed[];
+    withResearch: boolean;
+    signal: AbortSignal;
+    exclude?: string[];
+    /** The line the creator confirmed. Empty searches exactly as it would without one. */
+    audience?: string;
+  },
   deps: DiscoverDeps,
 ): AsyncGenerator<DiscoverEvent> {
-  const { lessons, seeds, withResearch } = args;
+  const { lessons, seeds, withResearch, audience } = args;
   const stop = new AbortController();
   const signal = AbortSignal.any([args.signal, stop.signal]);
 
@@ -117,7 +130,7 @@ export async function* discover(
     if (candidates.length === 0) return;
 
     const best = (keep: Keep) => Math.max(...keep.matches.map((match) => match.strength));
-    const finalists = (await deps.judge(lessons, candidates, signal))
+    const finalists = (await deps.judge(lessons, candidates, signal, audience))
       .filter((keep) => candidates[keep.index])
       .map((keep) => ({
         ...keep,
@@ -126,7 +139,7 @@ export async function* discover(
         ),
       }))
       .filter((keep) => keep.matches.length > 0)
-      .sort((a, b) => best(b) - best(a))
+      .sort((a, b) => best(b) - best(a) || Number(b.likeAudience ?? false) - Number(a.likeAudience ?? false))
       .slice(0, MAX_FINALISTS);
     if (finalists.length === 0 || signal.aborted) return;
 
@@ -172,6 +185,7 @@ export async function* discover(
           dateSource: pageDate ? "page" : "search",
           foundBy: group[Math.max(0, lists.findIndex((list) => list.includes(hit)))].query,
           origin: group[0].origin,
+          ...(audience && keep.likeAudience && { likeAudience: true }),
         },
         matches: keep.matches.map(
           ({ lessonId, strength, why }): Match => ({
@@ -198,6 +212,21 @@ export async function* discover(
     );
   }
 
+  async function runFirstWave() {
+    // A comment's searches are already specific, so only a full discovery is aimed.
+    if (!audience || !withResearch || signal.aborted) return runWave(seeds);
+    emit({ type: "status", message: "Aiming a search at your audience" });
+    try {
+      const aimed = await deps.aim(lessons, audience, AbortSignal.any([signal, AbortSignal.timeout(AIM_TIMEOUT_MS)]));
+      return await runWave(audienceSeeds(lessons, aimed));
+    } catch (error) {
+      if (signal.aborted) return;
+      console.error("aim:", error instanceof Error ? error.message : error);
+      emit({ type: "status", message: "Couldn't aim at your audience, searching for your lessons" });
+      return runWave(seeds);
+    }
+  }
+
   async function runResearch() {
     if (!withResearch || signal.aborted) return;
     emit({
@@ -208,7 +237,7 @@ export async function* discover(
     let found: { lessonIndex: number; query: string }[];
     try {
       found = await deps.research(
-        lessons.map((lesson) => lesson.whoItsFor),
+        lessons.map(({ whoItsFor }) => (audience ? `${whoItsFor}. Especially among: ${audience}` : whoItsFor)),
         signal,
       );
     } catch {
@@ -225,7 +254,7 @@ export async function* discover(
   }
 
   let finished = false;
-  void Promise.all([runWave(seeds), runResearch()]).finally(() => {
+  void Promise.all([runFirstWave(), runResearch()]).finally(() => {
     finished = true;
     wake();
   });

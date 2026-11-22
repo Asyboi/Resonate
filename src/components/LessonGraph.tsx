@@ -176,6 +176,13 @@ export default function LessonGraph({
     ctx.arc(x, y, r, 0, 2 * Math.PI);
     ctx.fill();
 
+    if (node.kind === "person" && node.likeAudience) {
+      ctx.fillStyle = selected ? COLOR.white : COLOR.navy;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.46, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
     if (selected || resonant) {
       ctx.strokeStyle = resonant ? COLOR.cyan : COLOR.blue;
       ctx.lineWidth = 2 * px;

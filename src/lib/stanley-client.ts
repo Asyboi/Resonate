@@ -4,7 +4,7 @@
 import { get, set } from "idb-keyval";
 import { useCallback, useEffect, useState } from "react";
 import { errorText, postJson } from "./client";
-import { parsePosts, type PulledPost, type StanleyResult } from "./stanley-protocol";
+import { parseAudience, parsePosts, type PulledAudience, type PulledPost, type StanleyResult } from "./stanley-protocol";
 
 const POSTS_KEY = "resonate:stanley-posts";
 const DEADLINE_MS = 180_000;
@@ -44,6 +44,7 @@ export function useStanley() {
   const [pulling, setPulling] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [pullError, setPullError] = useState<string | null>(null);
+  const [pullingAudience, setPullingAudience] = useState(false);
 
   const refresh = useCallback(() => {
     fetch("/api/stanley/status", { cache: "no-store" })
@@ -84,7 +85,21 @@ export function useStanley() {
     }
   }
 
-  return { ...status, posts, pulling, reviewing, setReviewing, pullError, pull, refresh };
+  async function pullAudience(): Promise<PulledAudience> {
+    setPullingAudience(true);
+    try {
+      const found = parseAudience(await waitForReply(await postJson<StanleyResult>("stanley/audience", {})));
+      if (!found) throw new Error("Stanley didn't return clear groups. Paste or type them instead.");
+      return found;
+    } catch (error) {
+      refresh();
+      throw error;
+    } finally {
+      setPullingAudience(false);
+    }
+  }
+
+  return { ...status, pullingAudience, pullAudience, posts, pulling, reviewing, setReviewing, pullError, pull, refresh };
 }
 
 export type Stanley = ReturnType<typeof useStanley> & { connect: () => void };

@@ -7,13 +7,15 @@ const KEY = "resonate:v1";
 export type Saved = {
   contexts: Context[];
   lessons: Lesson[];
+  /** The confirmed line. Empty means searches use the lessons alone. */
+  audience: string;
   people: Person[];
   matches: Match[];
   runAt: string | null;
   briefs: Record<string, Brief>;
 };
 
-export const EMPTY: Saved = { contexts: [], lessons: [], people: [], matches: [], runAt: null, briefs: {} };
+export const EMPTY: Saved = { contexts: [], lessons: [], audience: "", people: [], matches: [], runAt: null, briefs: {} };
 
 export async function load(): Promise<Saved> {
   try {

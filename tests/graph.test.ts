@@ -43,3 +43,17 @@ test("a shared person is one node with two links", () => {
 });
 test("an unmatched lesson stays a node", () =>
   expect(toGraph([lesson("a")], [], []).nodes).toMatchObject([{ id: "a", kind: "lesson", connections: 0 }]));
+test("someone like the audience wins a tie", () => {
+  const people = [...[1, 2, 3, 4, 5].map((n) => person(`p${n}`)), { ...person("like"), likeAudience: true }];
+  const shown = topMatches(people, people.map((p) => match(p.id, "a")));
+  expect(shown[0].personId).toBe("like");
+  expect(defaultSelection(shown)?.personId).toBe("like");
+});
+test("being like the audience never beats a stronger match", () => {
+  const people = [person("strong"), { ...person("like"), likeAudience: true }];
+  expect(topMatches(people, [match("strong", "a", 5), match("like", "a", 4)])[0].personId).toBe("strong");
+});
+test("the map knows who is like the audience", () => {
+  const { nodes } = toGraph([lesson("a")], [{ ...person("like"), likeAudience: true }, person("other")], [match("like", "a"), match("other", "a")]);
+  expect(nodes.slice(1)).toMatchObject([{ likeAudience: true }, { likeAudience: false }]);
+});
