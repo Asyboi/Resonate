@@ -220,3 +220,21 @@ test("does not report zero pages when every search failed", async () => {
   });
   expect(await run(deps)).not.toContainEqual(expect.objectContaining({ message: "0 pages found, 0 new and recent" }));
 });
+
+test("regression: drops an old page that Search dated inside the window", async () => {
+  const deps = fakes({
+    search: async () => [hit(URL_A, "2026-11-15T19:59:00Z")],
+    contents: async () => [
+      { url: URL_A, html: '<h1>Burnout</h1><time datetime="2026-11-14T22:00:00-05:00">Nov 14</time>', markdown: QUOTE },
+    ],
+  });
+  expect(people(await run(deps))).toHaveLength(0);
+});
+
+test("an unverified date near the 7-day edge is not trusted", async () => {
+  const deps = fakes({
+    search: async () => [hit(URL_A, "2026-11-15T19:59:00Z")],
+    contents: async () => [{ url: URL_A, html: "<p>hello</p>", markdown: QUOTE }],
+  });
+  expect(people(await run(deps))).toHaveLength(0);
+});

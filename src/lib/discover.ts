@@ -7,6 +7,10 @@ import type { Hit, Page } from "./you";
 const MAX_CANDIDATES = 15;
 const MAX_FINALISTS = 5;
 const MIN_STRENGTH = 3;
+const WINDOW_DAYS = 7;
+// Search dates ran up to 17 hours later than the page's own date in testing,
+// so without a date from the page, allow a day less.
+const UNVERIFIED_WINDOW_DAYS = WINDOW_DAYS - 1;
 
 export type Seed = { lessonId: string; query: string; origin: Origin };
 
@@ -94,7 +98,7 @@ export async function* discover(
     for (const hit of interleave(lists)) {
       if (candidates.length >= MAX_CANDIDATES) break;
       const key = canonical(hit.url);
-      if (!key || claimed.has(key) || !isRecent(hit.pageAge, now)) continue;
+      if (!key || claimed.has(key) || !isRecent(hit.pageAge, now, WINDOW_DAYS)) continue;
       claimed.add(key);
       candidates.push(hit);
     }
@@ -137,7 +141,7 @@ export async function* discover(
 
       const pageDate = page?.html ? extractPublished(page.html) : null;
       const publishedAt = pageDate ?? hit.pageAge!;
-      if (!isRecent(publishedAt, now)) continue;
+      if (!isRecent(publishedAt, now, pageDate ? WINDOW_DAYS : UNVERIFIED_WINDOW_DAYS)) continue;
 
       const id = createHash("sha256").update(url).digest("hex").slice(0, 16);
       emit({
