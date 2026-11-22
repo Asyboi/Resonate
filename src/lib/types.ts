@@ -37,6 +37,8 @@ export type Brief = {
   angle: string;
   question: string;
   take: string;
+  /** Always produced. Never depends on Stanley. */
+  post: string;
   /** Exactly what is copied or sent. */
   text: string;
   /** Never sent to Stanley. */

@@ -46,6 +46,7 @@ Next: go | <what the user must decide>
 - Legal age of majority and US only [D, sidebar].
 - A working tool, not a chatbot wrapper or a slide deck. "If your project would work just as well with a model trained last year, it's not the right project." [D]
 - One track. Ours is **Idea to Post**: turn a voice note, messy idea or link into a post, script or thread that fits what is working in the creator's niche this week [D, S15]. Best Content is in addition to the track [D].
+- [Team decision, 11:57] **Always produce a finished post, even when Stanley is absent or fails.** It is editable, uses the creator's take and this week's findings, and never names or quotes a found person. A brief alone fails question 1. Stanley can improve or save the post but cannot be the only way to get one.
 - [Ours] The repo is public: no secrets, personal data, Wi-Fi details, credit codes or invite links.
 
 ## Deadlines
@@ -115,6 +116,7 @@ Next: go | <what the user must decide>
 - [ ] Project name and one-line description
 - [ ] What we built and why: the problem, which creators, what it does
 - [ ] Track: Idea to Post
+- [ ] [Team decision] The live app reaches a finished post with Stanley disconnected
 - [ ] Each You.com endpoint used and what it powers
 - [ ] Public GitHub repo link, with the code pushed
 - [ ] Tools and technologies, including You.com
