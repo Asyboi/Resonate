@@ -50,7 +50,7 @@ export function LessonsScreen({
       const existing = lessons.map((lesson) => lesson.lesson);
       const { lessons: found } = await postJson<{ lessons: Lesson[] }>("lessons", { contexts: items, existing });
       if (found.length === 0) {
-        setError("No new lesson there. Add a moment you lived.");
+        setError("No new lesson there. Add a moment, struggle or idea.");
         return false;
       }
       onFound(items, found);
@@ -83,7 +83,7 @@ export function LessonsScreen({
         </button>
       ) : (
         <ul
-          className={`mt-[clamp(20px,5dvh,56px)] short:mt-5 grid w-full max-w-[1328px] shrink-0 gap-7 ${lessons.length === 1 ? "max-w-[424px] grid-cols-1" : lessons.length === 2 ? "max-w-[876px] grid-cols-2" : "grid-cols-3"}`}
+          className={`mt-[clamp(20px,5dvh,56px)] short:mt-5 grid w-full shrink-0 gap-7 ${lessons.length === 1 ? "max-w-[424px] grid-cols-1" : lessons.length === 2 ? "max-w-[876px] grid-cols-2" : "max-w-[1328px] grid-cols-3"}`}
         >
           {lessons.map((lesson) => {
             const evidence = lesson.evidence[0];

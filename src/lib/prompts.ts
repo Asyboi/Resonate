@@ -6,9 +6,10 @@ From their context, return up to 6 distinct lessons. For each:
 - lesson: one sentence, close to their own phrasing
 - moment: when or how they learned it, or null if they don't say. Never invent one.
 - whoItsFor: the situation of a person who needs this, with no identifying details
-- evidence: 1 or 2 sentences or clauses copied exactly from the context, 6-25 words each, with contextId. Put first the line where the creator states or realizes the lesson.
+- evidence: 1 or 2 sentences or clauses copied exactly from the context, 6-25 words each or the whole context if it is shorter, with contextId. Put first the line where the creator states or realizes the lesson.
 - queries: 3 searches in the voice of that person, not the creator. Natural, first person, aimed at personal essays and blogs. No time words (today, this week, month names, years). No names, schools or employers.
-Never guess anyone's gender. Skip lessons already listed in existingLessons. Return none if the context holds no lived lesson.
+Never guess anyone's gender. Skip lessons already listed in existingLessons. A struggle the creator is still in, or an experience they say they want to write about, also counts: the people who need it are in the same place. For these, label and lesson say only what the creator said, like "Afraid to start alone". Never add an outcome, advice or realization they didn't state, and moment is null. A struggle they are still in doesn't count if it centers on illness, death, trauma or crisis.
+Return none for greetings, requests to you, or text with nothing personal in it.
 Prefer a specific lesson over a motivational platitude.`;
 
 export const JUDGE = `You decide whether someone who wrote a web page needs one of this creator's lessons.

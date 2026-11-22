@@ -1,7 +1,7 @@
 import { guard } from "@/lib/guard";
 import { structured } from "@/lib/llm";
 import { LESSONS } from "@/lib/prompts";
-import { quoteAppears } from "@/lib/quotes";
+import { isOwnQuote } from "@/lib/quotes";
 import { LessonsBody, LessonsOutput } from "@/lib/schemas";
 import type { Lesson } from "@/lib/types";
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const textOf = new Map(contexts.map((context) => [context.id, context.text]));
     const lessons = output.lessons.flatMap((found): Lesson[] => {
       // A lesson with no real quote from the creator's own words is not their lesson.
-      const evidence = found.evidence.filter((item) => quoteAppears(item.quote, textOf.get(item.contextId) ?? ""));
+      const evidence = found.evidence.filter((item) => isOwnQuote(item.quote, textOf.get(item.contextId) ?? ""));
       const queries = found.queries.filter(Boolean).slice(0, 3);
       return evidence.length && queries.length ? [{ ...found, id: crypto.randomUUID(), evidence, queries }] : [];
     });
