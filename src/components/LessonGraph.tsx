@@ -3,7 +3,7 @@
 import { forceCollide, forceX, forceY } from "d3-force";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph, { type ForceGraphMethods } from "react-force-graph-2d";
-import { rankFor, type GraphLink, type Selection } from "@/lib/graph";
+import { betweenEdges, rankFor, type GraphLink, type Selection } from "@/lib/graph";
 import { Layout, type LayoutNode } from "@/lib/layout";
 import type { Lesson, Match, Person } from "@/lib/types";
 
@@ -26,6 +26,7 @@ const PULSE_MS = 700;
 const PULSE_GAP_MS = 250;
 const FADE_PER_FRAME = 0.22;
 const LINE_HEIGHT = 22;
+const RING = { gap: 5, width: 2 };
 
 type Rect = { x: number; y: number; w: number; h: number; id: string };
 
@@ -157,6 +158,11 @@ export default function LessonGraph({
     return view.top.has(node.id) ? 10 : 8;
   }
 
+  const hasRing = (node: LayoutNode) => node.kind === "person" && (node.id === selectedId || node.origin === "resonance");
+
+  /** Where a line should stop, in screen px. */
+  const outerRadius = (node: LayoutNode) => radiusOf(node) + (hasRing(node) ? RING.gap + RING.width / 2 : 0);
+
   function drawNode(node: LayoutNode, ctx: CanvasRenderingContext2D, scale: number) {
     const x = node.x ?? 0;
     const y = node.y ?? 0;
@@ -183,11 +189,11 @@ export default function LessonGraph({
       ctx.fill();
     }
 
-    if (selected || resonant) {
+    if (hasRing(node)) {
       ctx.strokeStyle = resonant ? COLOR.cyan : COLOR.blue;
-      ctx.lineWidth = 2 * px;
+      ctx.lineWidth = RING.width * px;
       ctx.beginPath();
-      ctx.arc(x, y, r + 5 * px, 0, 2 * Math.PI);
+      ctx.arc(x, y, r + RING.gap * px, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
@@ -254,7 +260,7 @@ export default function LessonGraph({
         }),
       );
       const h = lines.length * LINE_HEIGHT;
-      const ring = selected || (node.kind === "person" && node.origin === "resonance");
+      const ring = hasRing(node);
       const gap = r + (isLesson ? 9 : ring ? 13 : 8);
 
       const below = { x: x - w / 2, y: y + gap, w, h, id: node.id };
@@ -292,6 +298,14 @@ export default function LessonGraph({
     const from = link.source as unknown as LayoutNode;
     const to = link.target as unknown as LayoutNode;
     if (from.x === undefined || to.x === undefined) return;
+    const ends = betweenEdges(
+      { x: from.x, y: from.y ?? 0 },
+      { x: to.x, y: to.y ?? 0 },
+      outerRadius(from) / scale,
+      outerRadius(to) / scale,
+    );
+    if (!ends) return;
+    const [start, end] = ends;
     const resonant = to.kind === "person" && to.origin === "resonance";
     const lit = hovered ? hovered === endId(link.source) || hovered === endId(link.target) : link.lessonId === activeLesson;
     const strong = link.strength >= 4;
@@ -300,8 +314,8 @@ export default function LessonGraph({
     ctx.strokeStyle = resonant ? COLOR.cyan : lit ? COLOR.blue : COLOR.link;
     ctx.lineWidth = (lit ? (strong ? 2 : 1.25) : strong ? 1.75 : 1) / scale;
     ctx.beginPath();
-    ctx.moveTo(from.x, from.y ?? 0);
-    ctx.lineTo(to.x, to.y ?? 0);
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
     ctx.stroke();
     ctx.restore();
   }

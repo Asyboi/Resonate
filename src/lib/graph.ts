@@ -69,3 +69,15 @@ export function toGraph(lessons: Lesson[], people: Person[], matches: Match[]): 
     links: valid.map(({ lessonId, personId, strength }) => ({ source: lessonId, target: personId, lessonId, personId, strength })),
   };
 }
+
+type Point = { x: number; y: number };
+
+/** The part of a line outside both dots. A dimmed dot is see-through, so the line can't run to its center. */
+export function betweenEdges(from: Point, to: Point, fromRadius: number, toRadius: number): [Point, Point] | null {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const length = Math.hypot(dx, dy);
+  if (length <= fromRadius + toRadius) return null;
+  const at = (distance: number) => ({ x: from.x + (dx * distance) / length, y: from.y + (dy * distance) / length });
+  return [at(fromRadius), at(length - toRadius)];
+}

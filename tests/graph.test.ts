@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { defaultSelection, rankFor, strongestLesson, toGraph, topMatches } from "../src/lib/graph";
+import { betweenEdges, defaultSelection, rankFor, strongestLesson, toGraph, topMatches } from "../src/lib/graph";
 import type { Lesson, Match, Person } from "../src/lib/types";
 
 const lesson = (id: string): Lesson => ({ id, label: id, lesson: id, moment: null, whoItsFor: id, evidence: [], queries: ["q"] });
@@ -57,3 +57,7 @@ test("the map knows who is like the audience", () => {
   const { nodes } = toGraph([lesson("a")], [{ ...person("like"), likeAudience: true }, person("other")], [match("like", "a"), match("other", "a")]);
   expect(nodes.slice(1)).toMatchObject([{ likeAudience: true }, { likeAudience: false }]);
 });
+test("a line runs from one dot's edge to the other's", () =>
+  expect(betweenEdges({ x: 0, y: 0 }, { x: 60, y: 80 }, 20, 10)).toEqual([{ x: 12, y: 16 }, { x: 54, y: 72 }]));
+test("touching dots have no line between them", () => expect(betweenEdges({ x: 0, y: 0 }, { x: 20, y: 0 }, 12, 10)).toBeNull());
+test("dots in the same place have no line", () => expect(betweenEdges({ x: 5, y: 5 }, { x: 5, y: 5 }, 0, 0)).toBeNull());
