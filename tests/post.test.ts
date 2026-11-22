@@ -17,7 +17,7 @@ test("writes a post with no niche summary and no Stanley", async () => {
 });
 
 test("removes em dashes", async () => {
-  expect(await writePost(input, async () => "Balance—not perfection")).toBe("Balance - not perfection");
+  expect(await writePost(input, async () => "Balance\u2014not perfection")).toBe("Balance - not perfection");
 });
 
 test("fails loudly on an empty post", async () => {

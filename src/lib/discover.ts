@@ -58,7 +58,7 @@ function interleave(lists: Hit[][]): Hit[] {
 }
 
 export async function* discover(
-  args: { lessons: Lesson[]; seeds: Seed[]; withResearch: boolean; signal: AbortSignal },
+  args: { lessons: Lesson[]; seeds: Seed[]; withResearch: boolean; signal: AbortSignal; exclude?: string[] },
   deps: DiscoverDeps,
 ): AsyncGenerator<DiscoverEvent> {
   const { lessons, seeds, withResearch } = args;
@@ -74,6 +74,10 @@ export async function* discover(
 
   const lessonIds = new Set(lessons.map((lesson) => lesson.id));
   const claimed = new Set<string>();
+  for (const known of args.exclude ?? []) {
+    const key = canonical(known);
+    if (key) claimed.add(key);
+  }
 
   async function runLesson(lessonId: string, group: Seed[]) {
     if (signal.aborted) return;
@@ -81,7 +85,7 @@ export async function* discover(
     let failed = 0;
     const lists = await Promise.all(
       group.map(async ({ query }) => {
-        emit({ type: "status", lessonId, message: `Searching: ${query}` });
+        emit({ type: "status", lessonId, message: `Searching: ${query}`, you: { endpoint: "Search", calls: 1 } });
         try {
           return await deps.search(query, signal);
         } catch {
@@ -104,7 +108,12 @@ export async function* discover(
       candidates.push(hit);
     }
     const total = lists.reduce((sum, list) => sum + list.length, 0);
-    emit({ type: "status", lessonId, message: `${total} pages found, ${candidates.length} new and recent` });
+    emit({
+      type: "status",
+      lessonId,
+      message: `${total} pages found, ${candidates.length} new and recent`,
+      you: { endpoint: "Search", pages: total },
+    });
     if (candidates.length === 0) return;
 
     const best = (keep: Keep) => Math.max(...keep.matches.map((match) => match.strength));
@@ -121,7 +130,12 @@ export async function* discover(
       .slice(0, MAX_FINALISTS);
     if (finalists.length === 0 || signal.aborted) return;
 
-    emit({ type: "status", lessonId, message: `Checking quote and date on ${finalists.length} pages` });
+    emit({
+      type: "status",
+      lessonId,
+      message: `Checking quote and date on ${finalists.length} ${finalists.length === 1 ? "page" : "pages"}`,
+      you: { endpoint: "Contents", calls: 1 },
+    });
     let pages: Page[] = [];
     try {
       pages = await deps.contents(
@@ -156,6 +170,7 @@ export async function* discover(
           site: new URL(url).hostname.replace(/^www\./, ""),
           publishedAt,
           dateSource: pageDate ? "page" : "search",
+          foundBy: group[Math.max(0, lists.findIndex((list) => list.includes(hit)))].query,
           origin: group[0].origin,
         },
         matches: keep.matches.map(
@@ -185,7 +200,11 @@ export async function* discover(
 
   async function runResearch() {
     if (!withResearch || signal.aborted) return;
-    emit({ type: "status", message: "Researching what these people are dealing with" });
+    emit({
+      type: "status",
+      message: "Researching what these people are dealing with",
+      you: { endpoint: "Research", calls: 1 },
+    });
     let found: { lessonIndex: number; query: string }[];
     try {
       found = await deps.research(

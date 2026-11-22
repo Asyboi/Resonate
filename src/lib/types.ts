@@ -24,6 +24,8 @@ export type Person = {
   site: string;
   publishedAt: string;
   dateSource: "page" | "search";
+  /** The search that found them. */
+  foundBy: string;
   origin: Origin;
 };
 
@@ -31,11 +33,13 @@ export type Match = { personId: string; lessonId: string; strength: 1 | 2 | 3 | 
 
 export type Citation = { source: string; excerpts: string[] };
 
+export type NicheLine = { text: string; source: string };
+
 export type Brief = {
   lessonId: string;
   /** Stays local, never in the brief text. */
   personIds: string[];
-  niche: { summary: string; citations: Citation[] };
+  niche: NicheLine[];
   angle: string;
   question: string;
   take: string;
@@ -48,8 +52,14 @@ export type Brief = {
   handoff: "none" | "copied" | "sent";
 };
 
+export type Resonance = { lessonId: string; situation: string; queries: string[] };
+
+/** Which You.com call a status is reporting, so the screen can show the work. */
+export type YouCall = { endpoint: "Search" | "Contents" | "Research"; calls?: number; pages?: number };
+
 export type DiscoverEvent =
-  | { type: "status"; lessonId?: string; message: string }
+  | { type: "status"; lessonId?: string; message: string; you?: YouCall }
+  | ({ type: "resonance" } & Resonance)
   | { type: "person"; person: Person; matches: Match[] }
   | { type: "error"; lessonId?: string; message: string }
   | { type: "done" };

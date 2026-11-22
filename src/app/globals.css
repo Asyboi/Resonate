@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* A laptop screen with browser chrome. */
+@custom-variant short (@media (max-height: 800px));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme {
+  --color-white: #ffffff;
+  --color-panel: #f2f7ff;
+  --color-wash: #e3eefd;
+  --color-line: #cbdcf3;
+  --color-empty: #eef0f4;
+  --color-muted: #4d6285;
+  --color-navy: #0b2559;
+  --color-blue: #1d5fe0;
+  --color-sky: #86b4f3;
+  --color-resonance: #00aeef;
+  --color-resonance-wash: #ddf4fd;
+  --radius-field: 16px;
+  --radius-panel: 24px;
+  --animate-bar: bar 900ms ease-in-out infinite alternate;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @keyframes bar {
+    from {
+      transform: scaleY(0.35);
+    }
   }
 }
 
+@theme inline {
+  --font-display: var(--font-domine), serif;
+  --font-sans: var(--font-dm-sans), sans-serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-white font-sans text-navy;
+}
+
+/* In the base layer, so inputs inside a ringed pill can turn their own outline off. */
+@layer base {
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 3px;
+  }
 }

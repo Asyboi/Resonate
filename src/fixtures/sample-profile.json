@@ -1,0 +1,17 @@
+{
+  "note": "A fictional creator, safe to commit.",
+  "contexts": [
+    {
+      "kind": "post",
+      "text": "I used to run every morning. The semester I was applying for jobs, I tried to keep every habit at full speed and I failed at all of them. So I started walking on the days I had interviews. I felt like a quitter for about two weeks. Then I noticed I was still someone who moves every morning. Balance comes in seasons, and some things are allowed to sit at maintenance while one thing gets your best."
+    },
+    {
+      "kind": "note",
+      "text": "I studied architecture for three years because I had drawn buildings since I was nine. Switching to product design felt like killing the kid who drew those buildings. But the first time someone used a screen I designed, I felt the same thing I felt as a kid with a pencil. The dream did not disappear, it changed forms."
+    },
+    {
+      "kind": "voice",
+      "text": "My first design review I almost called in sick because everyone else had real portfolios and I had two class projects. I went anyway and said I was new. A senior designer stayed after to help me. I keep telling people now, start before you feel ready, because nobody can help you while you are still hiding."
+    }
+  ]
+}

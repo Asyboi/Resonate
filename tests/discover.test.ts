@@ -245,3 +245,20 @@ test("an unverified date near the 7-day edge is not trusted", async () => {
   });
   expect(people(await run(deps))).toHaveLength(0);
 });
+
+test("records which search found each person", async () => {
+  const deps = fakes({ search: async (query) => (query === "two" ? [hit()] : []) });
+  expect(people(await run(deps, { lessons: [lesson("a", ["one", "two"])] }))[0].person.foundBy).toBe("two");
+});
+
+test("skips people the creator already has", async () => {
+  const deps = fakes();
+  const lessons = [lesson("a")];
+  for await (const _ of discover(
+    { lessons, seeds: seedsFrom(lessons), withResearch: false, signal: new AbortController().signal, exclude: [URL_A] },
+    deps,
+  )) {
+    void _;
+  }
+  expect(deps.judge).not.toHaveBeenCalled();
+});
