@@ -4,7 +4,6 @@ import { liveDeps } from "@/lib/live";
 import { DiscoverBody } from "@/lib/schemas";
 import { eventStream } from "@/lib/sse";
 
-export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(request: Request) {

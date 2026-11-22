@@ -211,3 +211,12 @@ test("makes no calls once aborted", async () => {
   expect(deps.search).not.toHaveBeenCalled();
   expect(deps.research).not.toHaveBeenCalled();
 });
+
+test("does not report zero pages when every search failed", async () => {
+  const deps = fakes({
+    search: async () => {
+      throw new Error("down");
+    },
+  });
+  expect(await run(deps)).not.toContainEqual(expect.objectContaining({ message: "0 pages found, 0 new and recent" }));
+});

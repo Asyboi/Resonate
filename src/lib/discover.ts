@@ -73,18 +73,21 @@ export async function* discover(
   async function runLesson(lessonId: string, group: Seed[]) {
     if (signal.aborted) return;
 
+    let failed = 0;
     const lists = await Promise.all(
       group.map(async ({ query }) => {
         emit({ type: "status", lessonId, message: `Searching: ${query}` });
         try {
           return await deps.search(query, signal);
         } catch {
+          failed++;
           if (!signal.aborted) emit({ type: "error", lessonId, message: `Search failed: ${query}` });
           return [];
         }
       }),
     );
-    if (signal.aborted) return;
+    // An outage is not the same as "no one found", so don't report a count.
+    if (signal.aborted || failed === group.length) return;
 
     const now = deps.now();
     const candidates: Hit[] = [];
