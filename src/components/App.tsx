@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { errorText, NEEDS_CODE, postEvents, saveDemoCode } from "@/lib/client";
 import { defaultSelection, topMatches, type Selection } from "@/lib/graph";
 import { countCall, IDLE, type Run } from "@/lib/run";
+import { CONNECT_NOTICE, useStanley, type Stanley } from "@/lib/stanley-client";
 import { EMPTY, load, save, type Saved } from "@/lib/store";
 import type { Brief, DiscoverEvent, Lesson, Match, Person } from "@/lib/types";
 import { Composer } from "./Composer";
@@ -19,6 +20,19 @@ const STAGES: [Stage, string][] = [
   ["post", "Post"],
 ];
 const ARRIVAL_GAP_MS = 150;
+const NOTICE_MS = 8000;
+const RETURN_KEY = "resonate:return-to";
+
+/** Where the creator was before leaving to sign in to Stanley. */
+function takeReturn(): { stage?: Stage; writingFor?: Selection | null } {
+  try {
+    const saved = sessionStorage.getItem(RETURN_KEY);
+    sessionStorage.removeItem(RETURN_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
 
 const briefKey = (selection: Selection) => `${selection.lessonId}:${selection.personId}`;
 
@@ -54,7 +68,9 @@ export function App() {
   const [picked, setPicked] = useState<Selection | null>(null);
   const [writingFor, setWritingFor] = useState<Selection | null>(null);
   const [askCode, setAskCode] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const controller = useRef<AbortController>(null);
+  const stanleyState = useStanley();
 
   useEffect(() => {
     let live = true;
@@ -62,6 +78,14 @@ export function App() {
       if (!live) return;
       setSaved(stored);
       setRun({ ...IDLE, saved: Boolean(stored.runAt) });
+      const result = new URLSearchParams(window.location.search).get("stanley");
+      if (result) {
+        const back = takeReturn();
+        if (back.stage) setStage(back.stage);
+        if (back.writingFor) setWritingFor(back.writingFor);
+        setNotice(CONNECT_NOTICE[result] ?? null);
+        window.history.replaceState(null, "", "/");
+      }
       setHydrated(true);
     });
     return () => {
@@ -74,6 +98,12 @@ export function App() {
     const timer = setTimeout(() => void save(saved), 250);
     return () => clearTimeout(timer);
   }, [hydrated, saved]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
   useEffect(() => {
     const ask = () => setAskCode(true);
@@ -209,6 +239,20 @@ export function App() {
   }, []);
 
   const target = writingFor ?? selection;
+
+  async function connectStanley() {
+    try {
+      sessionStorage.setItem(RETURN_KEY, JSON.stringify({ stage, writingFor: target }));
+    } catch {
+      // Without storage, sign-in returns to Lessons.
+    }
+    // Saves are debounced, so finish this one before leaving the page.
+    await save(saved);
+    // An OAuth redirect needs a full page load, so the router can't do this.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign("/api/stanley/connect");
+  }
+  const stanley: Stanley = { ...stanleyState, connect: () => void connectStanley() };
   const targetLesson = saved.lessons.find((lesson) => lesson.id === target?.lessonId);
   const targetPerson = saved.people.find((person) => person.id === target?.personId);
 
@@ -237,6 +281,7 @@ export function App() {
         <LessonsScreen
           contexts={saved.contexts}
           lessons={saved.lessons}
+          stanley={stanley}
           onFound={(contexts, lessons) =>
             setSaved((current) => ({ ...current, contexts: [...current.contexts, ...contexts], lessons: [...current.lessons, ...lessons].slice(0, 6) }))
           }
@@ -278,6 +323,7 @@ export function App() {
             person={targetPerson}
             people={shown.people}
             matches={shown.matches}
+            stanley={stanley}
             brief={saved.briefs[briefKey(target)] ?? newBrief(target)}
             onChange={(patch) => changeBrief(target, patch)}
           />
@@ -287,6 +333,12 @@ export function App() {
             <Primary onClick={() => setStage("map")}>Open the map</Primary>
           </main>
         ))}
+
+      {notice && (
+        <p role="status" className="fixed top-4 right-6 z-10 max-w-[380px] rounded-[24px] bg-navy px-5 py-3 text-[16px] text-white">
+          {notice}
+        </p>
+      )}
 
       {askCode && (
         <Modal title="Demo code" onClose={() => setAskCode(false)}>

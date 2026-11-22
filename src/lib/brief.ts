@@ -1,5 +1,5 @@
 // Pure. Takes no Person, so it cannot leak a found person's name, quote or link.
-const MAX_CHARS = 8000; // Stanley's message limit.
+import { MAX_MESSAGE, SAVE_ONLY } from "./stanley-protocol";
 
 export function buildBrief(args: { lesson: string; situation: string; angle: string; take: string }): string {
   const { lesson, situation, angle, take } = args;
@@ -14,9 +14,9 @@ export function buildBrief(args: { lesson: string; situation: string; angle: str
       `In my words: ${take.trim()}`,
     ].join("\n"),
     "Keep my words and rhythm. Use only facts I gave here or that you already know are true about me. Don't invent moments, numbers or feelings. Speak to the situation without describing a specific person. Open on a concrete moment. No engagement bait and no em dashes.",
-    "Save it as an unscheduled draft. Do not schedule it. Do not publish it.",
+    SAVE_ONLY,
   ].join("\n\n");
 
-  if (text.length > MAX_CHARS) throw new Error("That brief is too long for Stanley. Shorten your take.");
+  if (text.length > MAX_MESSAGE) throw new Error("That brief is too long for Stanley. Shorten your take.");
   return text;
 }

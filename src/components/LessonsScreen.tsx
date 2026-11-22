@@ -3,10 +3,12 @@
 import { useState } from "react";
 import sample from "@/fixtures/sample-profile.json";
 import { errorText, postJson } from "@/lib/client";
+import type { Stanley } from "@/lib/stanley-client";
 import type { Context, Lesson } from "@/lib/types";
 import { ContextInput } from "./ContextInput";
 import { ArrowRight, Pencil } from "./icons";
 import { LessonEditor } from "./LessonEditor";
+import { PullFromStanley, ReviewPosts } from "./StanleyConnect";
 import { ErrorLine, Primary } from "./ui";
 
 const MAX_LESSONS = 6;
@@ -15,12 +17,14 @@ const KIND = { post: "Post", note: "Note", voice: "Voice" } as const;
 export function LessonsScreen({
   contexts,
   lessons,
+  stanley,
   onFound,
   onLessons,
   onFind,
 }: {
   contexts: Context[];
   lessons: Lesson[];
+  stanley: Stanley;
   onFound: (contexts: Context[], lessons: Lesson[]) => void;
   onLessons: (lessons: Lesson[]) => void;
   onFind: () => void;
@@ -63,8 +67,8 @@ export function LessonsScreen({
         What have you lived through?
       </h1>
       <div className="mt-7 flex w-full shrink-0 flex-col items-center gap-3">
-        <ContextInput busy={busy} onAdd={add} />
-        <ErrorLine message={error} />
+        <ContextInput busy={busy} onAdd={add} extra={<PullFromStanley stanley={stanley} />} />
+        <ErrorLine message={error ?? stanley.pullError} />
       </div>
 
       {lessons.length === 0 ? (
@@ -110,6 +114,8 @@ export function LessonsScreen({
         )}
         <p className="text-[15px] text-muted">Saved here. Read by OpenAI. Searches go to You.com.</p>
       </div>
+
+      {stanley.reviewing && <ReviewPosts stanley={stanley} contexts={contexts} busy={busy} onUse={add} />}
 
       {editing && (
         <LessonEditor

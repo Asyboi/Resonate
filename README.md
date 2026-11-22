@@ -13,6 +13,10 @@ Built at Creator Economy Hack, 2026-11-22. Track: Idea to Post.
 3. **Post.** See what the niche is saying, answer one question, and get a finished, editable post.
 4. **Resonance loop.** Paste a comment that resonated. With identifying details removed, it becomes new searches and the cluster grows.
 
+## Works alongside Stanley
+
+Optional. Resonate can connect to Stanley over MCP to pull a creator's past posts (confirmed by the creator before use) and to send a brief they have read and edited, to be saved as an unscheduled draft. It asks for the `chat` permission only and refuses a token that can publish. The finished post never depends on Stanley.
+
 ## How it uses You.com
 
 | API | What it powers |
@@ -26,7 +30,7 @@ Without the live web the map is empty.
 
 ## Stack
 
-Next.js, TypeScript, Tailwind, react-force-graph-2d, OpenAI GPT-6.2 Sol with structured outputs, IndexedDB.
+Next.js, TypeScript, Tailwind, react-force-graph-2d, MCP TypeScript SDK, OpenAI GPT-6.2 Sol with structured outputs, IndexedDB.
 
 ## Run it
 
@@ -36,12 +40,13 @@ cp .env.example .env.local   # add YOU_API_KEY and OPENAI_API_KEY
 pnpm dev
 ```
 
-`pnpm smoke` checks each live connection. `pnpm test` runs the tests. In production, set `DEMO_CODE`: the API routes refuse requests without it.
+`pnpm smoke` checks each live connection. `pnpm test` runs the tests. In production, set `DEMO_CODE`: the API routes refuse requests without it. Set `COOKIE_SECRET` (16+ random characters) to show the Stanley connection.
 
 ## Privacy
 
 - The creator's data is saved in their browser. It is sent to OpenAI for processing, with response storage off.
 - You.com gets searches, lesson names and audience descriptions. Identifying details are removed from pasted comments before searching.
+- Stanley gets a brief only when the creator sends it. Its tokens stay in encrypted, httpOnly cookies.
 - A post never receives a found person's name, quote or link.
 - People who appear to be minors or in crisis, or whose struggle centers on illness, loss or trauma, are not shown.
 - Nothing is sent or published on the creator's behalf.

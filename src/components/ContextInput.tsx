@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { Context } from "@/lib/types";
 import { Plus } from "./icons";
 import { VoiceInput } from "./VoiceInput";
@@ -22,7 +22,15 @@ function split(text: string): string[] {
   return [...parts, rest].filter(Boolean).slice(0, MAX_ITEMS);
 }
 
-export function ContextInput({ busy, onAdd }: { busy: boolean; onAdd: (items: Context[]) => Promise<boolean> }) {
+export function ContextInput({
+  busy,
+  onAdd,
+  extra,
+}: {
+  busy: boolean;
+  onAdd: (items: Context[]) => Promise<boolean>;
+  extra?: ReactNode;
+}) {
   const [text, setText] = useState("");
   const [spoken, setSpoken] = useState(false);
   const tall = text.length > 70 || text.includes("\n");
@@ -59,6 +67,7 @@ export function ContextInput({ busy, onAdd }: { busy: boolean; onAdd: (items: Co
         }}
         className="min-w-0 flex-1 resize-none bg-transparent py-3 text-[19px] leading-6 outline-none placeholder:text-muted"
       />
+      {extra}
       <VoiceInput
         onText={(part) => {
           setSpoken(true);

@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { buildBrief } from "@/lib/brief";
 import { errorText, postJson } from "@/lib/client";
 import { rankFor } from "@/lib/graph";
+import type { Stanley } from "@/lib/stanley-client";
 import type { Brief, Lesson, Match, NicheLine, Person } from "@/lib/types";
+import { BriefReview, useSendBrief } from "./BriefReview";
 import { ArrowRight, Copy, Mail, Pencil } from "./icons";
-import { CopyButton, ErrorLine, field, Modal, outline, Primary, Secondary } from "./ui";
+import { CopyButton, ErrorLine, Primary, Secondary } from "./ui";
 import { VoiceInput } from "./VoiceInput";
 
-const STANLEY_URL = "https://app.getstanley.ai/";
 const FALLBACK_QUESTION = "When did you live this yourself?";
 const BARS = [10, 22, 16, 30, 20, 12, 26, 34, 18, 28, 14, 24, 32, 16, 22, 12, 28, 18, 30, 14, 20, 10];
 
@@ -35,6 +36,7 @@ export function Composer({
   matches,
   people,
   brief,
+  stanley,
   onChange,
 }: {
   lesson: Lesson;
@@ -42,6 +44,7 @@ export function Composer({
   matches: Match[];
   people: Person[];
   brief: Brief;
+  stanley: Stanley;
   onChange: (patch: Partial<Brief> | ((current: Brief) => Partial<Brief>)) => void;
 }) {
   const [angleError, setAngleError] = useState<string | null>(null);
@@ -53,6 +56,7 @@ export function Composer({
   const [reviewing, setReviewing] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noting, setNoting] = useState(false);
+  const { sending, send } = useSendBrief(stanley, onChange);
 
   // The person chosen first, then up to two others who need the same lesson.
   const others = rankFor(lesson.id, matches).filter((match) => match.personId !== person.id).slice(0, 2);
@@ -263,7 +267,11 @@ export function Composer({
                 {writing ? "Writing" : "Write post"} <ArrowRight className="size-7" />
               </Primary>
             )}
-            {take && <Secondary onClick={reviewBrief}>Stanley brief</Secondary>}
+            {take && (
+              <Secondary onClick={reviewBrief}>
+                {sending.busy ? "Stanley is saving" : brief.handoff === "sent" ? "Sent to Stanley" : stanley.available ? "Send to Stanley" : "Stanley brief"}
+              </Secondary>
+            )}
           </div>
         </div>
 
@@ -298,24 +306,14 @@ export function Composer({
       </section>
 
       {reviewing && (
-        <Modal title="Stanley brief" onClose={() => setReviewing(false)}>
-          <textarea
-            aria-label="Stanley brief"
-            rows={14}
-            maxLength={8000}
-            className={field}
-            value={brief.text}
-            onChange={(event) => onChange({ text: event.target.value })}
-          />
-          <div className="mt-5 flex items-center justify-between gap-3">
-            <a href={STANLEY_URL} target="_blank" rel="noopener noreferrer" className={outline}>
-              Open Stanley ↗
-            </a>
-            <CopyButton primary text={brief.text} onCopied={() => onChange({ handoff: "copied" })}>
-              Copy brief
-            </CopyButton>
-          </div>
-        </Modal>
+        <BriefReview
+          brief={brief}
+          stanley={stanley}
+          sending={sending}
+          onSend={(text) => void send(text)}
+          onChange={onChange}
+          onClose={() => setReviewing(false)}
+        />
       )}
     </main>
   );

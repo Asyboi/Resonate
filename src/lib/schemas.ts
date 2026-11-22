@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_MESSAGE, MESSAGE_ID } from "./stanley-protocol";
 
 export const JudgeOutput = z.object({
   keeps: z.array(
@@ -84,3 +85,7 @@ export const ResonateBody = z.object({
 });
 
 export const ResonateOutput = z.object({ lessonId: z.string(), situation: z.string(), queries: z.array(z.string()) });
+
+export const EmptyBody = z.object({});
+export const SendBody = z.object({ text: z.string().trim().min(1).max(MAX_MESSAGE) });
+export const CheckBody = z.object({ id: z.string().regex(new RegExp(`^${MESSAGE_ID.source}$`)) });
