@@ -1,9 +1,11 @@
-// Every Claude call lives in this file.
-import Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+// Every model call lives in this file.
+import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
 import type { z } from "zod";
 
-let client: Anthropic | undefined;
+const MODEL = "gpt-6.2-sol";
+
+let client: OpenAI | undefined;
 
 export async function structured<S extends z.ZodType>(args: {
   system: string;
@@ -12,19 +14,23 @@ export async function structured<S extends z.ZodType>(args: {
   effort: "low" | "medium";
   signal?: AbortSignal;
 }): Promise<z.infer<S>> {
-  client ??= new Anthropic();
-  const res = await client.beta.messages.parse(
+  client ??= new OpenAI();
+  const res = await client.responses.parse(
     {
-      model: "claude-opus-5-5",
-      max_tokens: 16000,
-      system: args.system,
-      messages: [{ role: "user", content: JSON.stringify(args.input) }],
-      output_config: { effort: args.effort, format: betaZodOutputFormat(args.schema) },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      model: MODEL,
+      // Creators' stories and found people's words should not be kept as stored responses.
+      store: false,
+      // A developer message rather than `instructions`, which GPT-6.2 appends after the untrusted input.
+      input: [
+        { role: "developer", content: args.system },
+        { role: "user", content: JSON.stringify(args.input) },
+      ],
+      reasoning: { effort: args.effort },
+      text: { format: zodTextFormat(args.schema, "result") },
     },
     { signal: args.signal, timeout: 60_000, maxRetries: 1 },
   );
-  if (res.stop_reason === "refusal" || res.parsed_output == null) throw new Error("No usable model output");
-  return res.parsed_output;
+  // Null on a refusal or an incomplete response.
+  if (res.output_parsed == null) throw new Error("No usable model output");
+  return res.output_parsed as z.infer<S>;
 }

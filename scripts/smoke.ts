@@ -8,7 +8,7 @@ const checks: Record<string, () => Promise<string>> = {
   contents: async () => `${(await you.contents(["https://you.com/docs/quickstart"])).length} page`,
   answer: async () => `${(await you.answer("What are college students saying about burnout?")).citations.length} citations`,
   research: async () => `${(await you.research(["college students juggling recruiting and classes"])).length} searches`,
-  claude: async () =>
+  openai: async () =>
     (await structured({ system: "Reply with ok set to true.", input: "ping", schema: z.object({ ok: z.boolean() }), effort: "low" })).ok
       ? "structured output"
       : "unexpected output",
