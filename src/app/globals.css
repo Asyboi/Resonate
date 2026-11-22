@@ -17,13 +17,6 @@
   --color-resonance-wash: #ddf4fd;
   --radius-field: 16px;
   --radius-panel: 24px;
-  --animate-bar: bar 900ms ease-in-out infinite alternate;
-
-  @keyframes bar {
-    from {
-      transform: scaleY(0.35);
-    }
-  }
 }
 
 @theme inline {

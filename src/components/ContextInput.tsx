@@ -3,7 +3,6 @@
 import { useState, type ReactNode } from "react";
 import type { Context } from "@/lib/types";
 import { Plus } from "./icons";
-import { VoiceInput } from "./VoiceInput";
 
 const MAX_CHARS = 10_000;
 const MAX_ITEMS = 20;
@@ -32,16 +31,12 @@ export function ContextInput({
   extra?: ReactNode;
 }) {
   const [text, setText] = useState("");
-  const [spoken, setSpoken] = useState(false);
   const tall = text.length > 70 || text.includes("\n");
 
   async function add() {
-    const kind = spoken ? "voice" : text.length > POST_CHARS ? "post" : "note";
+    const kind = text.length > POST_CHARS ? "post" : "note";
     const items = split(text).map((part): Context => ({ id: crypto.randomUUID(), kind, text: part }));
-    if (items.length && (await onAdd(items))) {
-      setText("");
-      setSpoken(false);
-    }
+    if (items.length && (await onAdd(items))) setText("");
   }
 
   return (
@@ -68,12 +63,6 @@ export function ContextInput({
         className="min-w-0 flex-1 resize-none bg-transparent py-3 text-[19px] leading-6 outline-none placeholder:text-muted"
       />
       {extra}
-      <VoiceInput
-        onText={(part) => {
-          setSpoken(true);
-          setText((current) => `${current} ${part}`.trim());
-        }}
-      />
       <button
         type="submit"
         aria-label="Find lessons"

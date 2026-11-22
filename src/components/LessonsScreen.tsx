@@ -13,7 +13,8 @@ import { PullFromStanley, ReviewPosts } from "./StanleyConnect";
 import { ErrorLine, Primary } from "./ui";
 
 const MAX_LESSONS = 6;
-const KIND = { post: "Post", note: "Note", voice: "Voice" } as const;
+// "voice" only exists in work saved before speech input was removed.
+const KIND = { post: "Post", note: "Note", voice: "Note" } as const;
 
 export function LessonsScreen({
   contexts,

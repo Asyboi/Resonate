@@ -8,7 +8,7 @@ Built at Creator Economy Hack, 2026-11-22. Track: Idea to Post.
 
 ## How it works
 
-1. **Lessons.** Paste posts, notes or speak. Every lesson links to a quote from the creator's own words.
+1. **Lessons.** Paste or type posts and notes. Every lesson links to a quote from the creator's own words. Optionally confirm one line about who reads you, which steers the searches.
 2. **Map.** Live searches find people and cluster them around each lesson, labeled by situation and never by name.
 3. **Post.** See what the niche is saying, answer one question, and get a finished, editable post.
 4. **Resonance loop.** Paste a comment that resonated. With identifying details removed, it becomes new searches and the cluster grows.

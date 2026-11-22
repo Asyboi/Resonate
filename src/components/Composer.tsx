@@ -9,26 +9,10 @@ import type { Brief, Lesson, Match, NicheLine, Person } from "@/lib/types";
 import { BriefReview, useSendBrief } from "./BriefReview";
 import { ArrowRight, Copy, Mail, Pencil } from "./icons";
 import { CopyButton, ErrorLine, Primary, Secondary } from "./ui";
-import { VoiceInput } from "./VoiceInput";
 
 const FALLBACK_QUESTION = "When did you live this yourself?";
-const BARS = [10, 22, 16, 30, 20, 12, 26, 34, 18, 28, 14, 24, 32, 16, 22, 12, 28, 18, 30, 14, 20, 10];
 
 const siteOf = (url: string) => new URL(url).hostname.replace(/^www\./, "");
-
-function Bars({ moving }: { moving: boolean }) {
-  return (
-    <span className="flex min-w-0 flex-1 items-center gap-[5px] overflow-hidden" aria-hidden="true">
-      {BARS.map((height, index) => (
-        <span
-          key={index}
-          style={{ height, animationDelay: `${index * -90}ms` }}
-          className={`w-1 shrink-0 rounded-full bg-sky ${moving ? "motion-safe:animate-bar" : ""}`}
-        />
-      ))}
-    </span>
-  );
-}
 
 export function Composer({
   lesson,
@@ -51,7 +35,6 @@ export function Composer({
   const [attempt, setAttempt] = useState(0);
   const [writing, setWriting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [listening, setListening] = useState(false);
   const [editingTake, setEditingTake] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -200,32 +183,29 @@ export function Composer({
 
         <div className="shrink-0">
           <h2 className="mb-3 font-display text-[24px] leading-8 font-semibold short:mb-2 short:text-[19px] short:leading-6">{brief.question || FALLBACK_QUESTION}</h2>
-          <div className={`flex gap-4 bg-panel p-3 ${showTranscript ? "items-end rounded-[28px]" : "items-center rounded-full"}`}>
-            <VoiceInput
-              onListening={setListening}
-              onText={(part) => onChange((current) => ({ take: `${current.take} ${part}`.trim() }))}
-            />
-            {listening ? (
-              <Bars moving />
-            ) : showTranscript ? (
+          {showTranscript ? (
+            <div className="flex rounded-[28px] border-2 border-transparent bg-panel px-6 py-3 focus-within:border-blue">
               <textarea
                 aria-label="Your answer"
-                placeholder="Say it or type it"
+                placeholder="Type your answer"
                 rows={4}
                 maxLength={7000}
                 value={brief.take}
                 onChange={(event) => onChange({ take: event.target.value })}
                 className="min-w-0 flex-1 resize-none bg-transparent py-2 text-[18px] leading-6 outline-none placeholder:text-muted short:h-[88px] short:text-[16px] short:leading-5"
               />
-            ) : (
-              <>
-                <Bars moving={false} />
-                <button type="button" aria-label="Edit your answer" onClick={() => setEditingTake(true)} className="shrink-0 p-3 text-muted">
-                  <Pencil />
-                </button>
-              </>
-            )}
-          </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label="Edit your answer"
+              onClick={() => setEditingTake(true)}
+              className="flex h-[76px] w-full items-center gap-4 rounded-full bg-panel px-7 text-left hover:bg-wash"
+            >
+              <span className="min-w-0 flex-1 truncate text-[18px] short:text-[16px]">{brief.take}</span>
+              <Pencil className="size-6 shrink-0 text-muted" />
+            </button>
+          )}
           {editingTake && brief.post && (
             <button
               type="button"
