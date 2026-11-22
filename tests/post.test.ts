@@ -6,14 +6,14 @@ const input: PostInput = {
   lesson: "Balance comes in seasons",
   evidence: ["move other things to maintenance"],
   angle: "Maintenance is a choice",
-  take: "I stopped chasing PRs while recruiting.",
+  take: "I paused pottery while studying for exams.",
   situations: ["Afraid to rest"],
   nicheSummary: "",
 };
 
 test("writes a post with no niche summary and no Stanley", async () => {
-  const generate = vi.fn(async () => "I stopped chasing PRs.");
-  expect(await writePost(input, generate)).toBe("I stopped chasing PRs.");
+  const generate = vi.fn(async () => "I paused pottery.");
+  expect(await writePost(input, generate)).toBe("I paused pottery.");
 });
 
 test("removes em dashes", async () => {

@@ -20,7 +20,7 @@ async function main() {
     else if (event.type === "error") console.log(`${elapsed()}  ERROR ${event.message}`);
     else if (event.type === "person") {
       const { person, matches } = event;
-      console.log(`\n${elapsed()}  * ${person.situation} [${person.origin}]`);
+      console.log(`\n${elapsed()}  * ${person.label}: ${person.situation} [${person.origin}]`);
       console.log(`   "${person.quote}"`);
       console.log(`   ${person.publishedAt.slice(0, 10)} (date from ${person.dateSource})  ${person.url}`);
       for (const match of matches) {

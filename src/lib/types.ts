@@ -15,7 +15,9 @@ export type Origin = "discovery" | "research" | "resonance";
 export type Person = {
   /** Hash of the canonical URL. */
   id: string;
-  /** Node label. Never a name. */
+  /** Node label: 2-3 words. Never a name. */
+  label: string;
+  /** Longer wording for the panel. Never a name. */
   situation: string;
   quote: string;
   url: string;

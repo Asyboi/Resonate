@@ -16,6 +16,7 @@ export type Seed = { lessonId: string; query: string; origin: Origin };
 
 export type Keep = {
   index: number;
+  label: string;
   situation: string;
   quote: string;
   matches: { lessonId: string; strength: number; why: string }[];
@@ -148,6 +149,7 @@ export async function* discover(
         type: "person",
         person: {
           id,
+          label: keep.label,
           situation: keep.situation,
           quote: keep.quote,
           url,

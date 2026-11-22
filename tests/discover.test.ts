@@ -38,6 +38,7 @@ function fakes(overrides: Partial<DiscoverDeps> = {}): DiscoverDeps {
     judge: vi.fn(async (_lessons, candidates) =>
       candidates.map((_: unknown, index: number) => ({
         index,
+        label: "Afraid to rest",
         situation: "Afraid to rest",
         quote: QUOTE,
         matches: [{ lessonId: "a", strength: 4, why: "Same situation" }],
@@ -84,6 +85,10 @@ test("labels the date as from search when the page has none", async () => {
   expect(people(await run(deps))[0].person.dateSource).toBe("search");
 });
 
+test("carries the short node label", async () => {
+  expect(people(await run(fakes()))[0].person.label).toBe("Afraid to rest");
+});
+
 test("prefers the page's own date", async () => {
   const { person } = people(await run(fakes()))[0];
   expect(person.dateSource).toBe("page");
@@ -112,6 +117,7 @@ test("drops an invented quote when Contents fails", async () => {
     judge: async () => [
       {
         index: 0,
+        label: "Invented",
         situation: "Invented",
         quote: "I never wrote any of these words at all",
         matches: [{ lessonId: "a", strength: 5, why: "x" }],
@@ -132,6 +138,7 @@ test("links one person to two lessons and ignores invalid matches", async () => 
     judge: async () => [
       {
         index: 0,
+        label: "Afraid to rest",
         situation: "Afraid to rest",
         quote: QUOTE,
         matches: [
@@ -150,7 +157,7 @@ test("links one person to two lessons and ignores invalid matches", async () => 
 test("ignores matches below strength 3", async () => {
   const deps = fakes({
     judge: async () => [
-      { index: 0, situation: "x", quote: QUOTE, matches: [{ lessonId: "a", strength: 2, why: "weak" }] },
+      { index: 0, label: "x", situation: "x", quote: QUOTE, matches: [{ lessonId: "a", strength: 2, why: "weak" }] },
     ],
   });
   expect(people(await run(deps))).toHaveLength(0);

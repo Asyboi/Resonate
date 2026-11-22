@@ -4,6 +4,7 @@ export const JudgeOutput = z.object({
   keeps: z.array(
     z.object({
       index: z.number().int(),
+      label: z.string(),
       situation: z.string(),
       quote: z.string(),
       matches: z.array(z.object({ lessonId: z.string(), strength: z.number().int(), why: z.string() })),
